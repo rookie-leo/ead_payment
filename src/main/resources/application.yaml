@@ -1,11 +1,10 @@
 spring:
+  profiles:
+    active: dev
   application:
     name: ead-payment-service
-  output:
-    ansi:
-      enabled: Always
   config:
-    import: 'optional:configserver:'
+    import: 'configserver:'
   cloud:
     config:
       discovery:
