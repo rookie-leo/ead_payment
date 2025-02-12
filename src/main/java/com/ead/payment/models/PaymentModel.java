@@ -34,7 +34,7 @@ public class PaymentModel implements Serializable {
     private LocalDateTime paymentExpirationDate;
 
     @Column(nullable = false, length = 4)
-    private String lastDDigitsCreditCard;
+    private String lastDigitsCreditCard;
 
     @Column(nullable = false)
     private BigDecimal valuePaid;
@@ -89,12 +89,12 @@ public class PaymentModel implements Serializable {
         this.paymentExpirationDate = paymentExpirationDate;
     }
 
-    public String getLastDDigitsCreditCard() {
-        return lastDDigitsCreditCard;
+    public String getLastDigitsCreditCard() {
+        return lastDigitsCreditCard;
     }
 
-    public void setLastDDigitsCreditCard(String lastDDigitsCreditCard) {
-        this.lastDDigitsCreditCard = lastDDigitsCreditCard;
+    public void setLastDigitsCreditCard(String lastDigitsCreditCard) {
+        this.lastDigitsCreditCard = lastDigitsCreditCard;
     }
 
     public BigDecimal getValuePaid() {
