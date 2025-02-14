@@ -2,6 +2,7 @@ package com.ead.payment.services.Impl;
 
 import com.ead.payment.dtos.PaymentRequestRecordDto;
 import com.ead.payment.enums.PaymentControl;
+import com.ead.payment.exceptions.NotFoundException;
 import com.ead.payment.models.CreditCardModel;
 import com.ead.payment.models.PaymentModel;
 import com.ead.payment.models.UserModel;
@@ -10,12 +11,16 @@ import com.ead.payment.repositories.PaymentRepository;
 import com.ead.payment.repositories.UserRepository;
 import com.ead.payment.services.PaymentService;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
@@ -58,5 +63,19 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public Optional<PaymentModel> findLastPaymentByUser(UserModel userModel) {
         return paymentRepository.findTopByUserOrderByPaymentRequestDateDesc(userModel);
+    }
+
+    @Override
+    public Page<PaymentModel> findAllByUser(Specification<PaymentModel> spec, Pageable pageable) {
+        return paymentRepository.findAll(spec, pageable);
+    }
+
+    @Override
+    public Optional<PaymentModel> findPaymentByUser(UUID userId, UUID paymentId) {
+        Optional<PaymentModel> paymentModelOptional = paymentRepository.findPaymentByUser(userId, paymentId);
+
+        if (paymentModelOptional.isEmpty()) throw new NotFoundException("Payment not found for this user");
+
+        return paymentModelOptional;
     }
 }
