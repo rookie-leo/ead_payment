@@ -1,15 +1,19 @@
 package com.ead.payment.services.Impl;
 
+import com.ead.payment.dtos.PaymentCommandRecordDto;
 import com.ead.payment.dtos.PaymentRequestRecordDto;
 import com.ead.payment.enums.PaymentControl;
 import com.ead.payment.exceptions.NotFoundException;
 import com.ead.payment.models.CreditCardModel;
 import com.ead.payment.models.PaymentModel;
 import com.ead.payment.models.UserModel;
+import com.ead.payment.publishers.PaymentCommandPublisher;
 import com.ead.payment.repositories.CreditCardRepository;
 import com.ead.payment.repositories.PaymentRepository;
 import com.ead.payment.repositories.UserRepository;
 import com.ead.payment.services.PaymentService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,14 +29,18 @@ import java.util.UUID;
 @Service
 public class PaymentServiceImpl implements PaymentService {
 
+    Logger logger = LogManager.getLogger(PaymentServiceImpl.class);
+
     final PaymentRepository paymentRepository;
     final UserRepository userRepository;
     final CreditCardRepository creditCardRepository;
+    final PaymentCommandPublisher paymentCommandPublisher;
 
-    public PaymentServiceImpl(PaymentRepository paymentRepository, UserRepository userRepository, CreditCardRepository creditCardRepository) {
+    public PaymentServiceImpl(PaymentRepository paymentRepository, UserRepository userRepository, CreditCardRepository creditCardRepository, PaymentCommandPublisher paymentCommandPublisher) {
         this.paymentRepository = paymentRepository;
         this.userRepository = userRepository;
         this.creditCardRepository = creditCardRepository;
+        this.paymentCommandPublisher = paymentCommandPublisher;
     }
 
     @Transactional
@@ -55,7 +63,12 @@ public class PaymentServiceImpl implements PaymentService {
         paymentModel.setUser(userModel);
         paymentRepository.save(paymentModel);
 
-
+        try {
+            var paymentCommandRecordDto = new PaymentCommandRecordDto(userModel.getUserId(), paymentModel.getPaymentId(), creditCardModel.getCardId());
+            paymentCommandPublisher.publisherPaymentCommand(paymentCommandRecordDto);
+        } catch (Exception ex) {
+            logger.error("Error sending payment command message with casue: {}", ex.getMessage());
+        }
 
         return paymentModel;
     }
