@@ -1,5 +1,6 @@
 package com.ead.payment.services;
 
+import com.ead.payment.dtos.PaymentCommandRecordDto;
 import com.ead.payment.dtos.PaymentRequestRecordDto;
 import com.ead.payment.models.PaymentModel;
 import com.ead.payment.models.UserModel;
@@ -19,4 +20,6 @@ public interface PaymentService {
     Page<PaymentModel> findAllByUser(Specification<PaymentModel> spec, Pageable pageable);
 
     Optional<PaymentModel> findPaymentByUser(UUID userId, UUID paymentId);
+
+    void makePayment(PaymentCommandRecordDto paymentCommandRecordDto);
 }

@@ -12,6 +12,7 @@ import com.ead.payment.repositories.CreditCardRepository;
 import com.ead.payment.repositories.PaymentRepository;
 import com.ead.payment.repositories.UserRepository;
 import com.ead.payment.services.PaymentService;
+import com.ead.payment.services.PaymentStripeService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.BeanUtils;
@@ -35,12 +36,14 @@ public class PaymentServiceImpl implements PaymentService {
     final UserRepository userRepository;
     final CreditCardRepository creditCardRepository;
     final PaymentCommandPublisher paymentCommandPublisher;
+    final PaymentStripeService paymentStripeService;
 
-    public PaymentServiceImpl(PaymentRepository paymentRepository, UserRepository userRepository, CreditCardRepository creditCardRepository, PaymentCommandPublisher paymentCommandPublisher) {
+    public PaymentServiceImpl(PaymentRepository paymentRepository, UserRepository userRepository, CreditCardRepository creditCardRepository, PaymentCommandPublisher paymentCommandPublisher, PaymentStripeService paymentStripeService) {
         this.paymentRepository = paymentRepository;
         this.userRepository = userRepository;
         this.creditCardRepository = creditCardRepository;
         this.paymentCommandPublisher = paymentCommandPublisher;
+        this.paymentStripeService = paymentStripeService;
     }
 
     @Transactional
@@ -90,5 +93,15 @@ public class PaymentServiceImpl implements PaymentService {
         if (paymentModelOptional.isEmpty()) throw new NotFoundException("Payment not found for this user");
 
         return paymentModelOptional;
+    }
+
+    @Transactional
+    @Override
+    public void makePayment(PaymentCommandRecordDto paymentCommandRecordDto) {
+        var payment = paymentRepository.findById(paymentCommandRecordDto.paymentId()).get();
+        var user = userRepository.findById(paymentCommandRecordDto.userId()).get();
+        var creditCard = creditCardRepository.findById(paymentCommandRecordDto.cardId()).get();
+
+        payment = paymentStripeService.processStripePayment(payment, creditCard);
     }
 }

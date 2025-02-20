@@ -25,7 +25,6 @@ public class PaymentConsumer {
             key = "${ead.broker.key.paymentCommandKey}"
     ))
     public void listenPaymentCommand(@Payload PaymentCommandRecordDto paymentCommandRecordDto) {
-        System.out.println(paymentCommandRecordDto.paymentId());
-        System.out.println(paymentCommandRecordDto.userId());
+        paymentService.makePayment(paymentCommandRecordDto);
     }
 }
