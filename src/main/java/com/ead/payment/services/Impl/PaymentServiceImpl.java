@@ -3,6 +3,7 @@ package com.ead.payment.services.Impl;
 import com.ead.payment.dtos.PaymentCommandRecordDto;
 import com.ead.payment.dtos.PaymentRequestRecordDto;
 import com.ead.payment.enums.PaymentControl;
+import com.ead.payment.enums.PaymentStatus;
 import com.ead.payment.exceptions.NotFoundException;
 import com.ead.payment.models.CreditCardModel;
 import com.ead.payment.models.PaymentModel;
@@ -103,5 +104,20 @@ public class PaymentServiceImpl implements PaymentService {
         var creditCard = creditCardRepository.findById(paymentCommandRecordDto.cardId()).get();
 
         payment = paymentStripeService.processStripePayment(payment, creditCard);
+        paymentRepository.save(payment);
+
+        if (payment.getPaymentControl().equals(PaymentControl.EFFECTED)) {
+            user.setPaymentStatus(PaymentStatus.PAYING);
+            user.setLastPaymentDate(LocalDateTime.now(ZoneId.of("UTC")));
+            user.setPaymentExpirationDate(LocalDateTime.now(ZoneId.of("UTC")).plusMonths(12));
+
+            if (user.getFirstPaymentDate() == null) {
+                user.setFirstPaymentDate(LocalDateTime.now(ZoneId.of("UTC")));
+            }
+        } else {
+            user.setPaymentStatus(PaymentStatus.DEBTOR);
+        }
+
+        userRepository.save(user);
     }
 }
