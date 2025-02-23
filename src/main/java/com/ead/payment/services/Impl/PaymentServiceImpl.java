@@ -9,6 +9,7 @@ import com.ead.payment.models.CreditCardModel;
 import com.ead.payment.models.PaymentModel;
 import com.ead.payment.models.UserModel;
 import com.ead.payment.publishers.PaymentCommandPublisher;
+import com.ead.payment.publishers.PaymentEventPublisher;
 import com.ead.payment.repositories.CreditCardRepository;
 import com.ead.payment.repositories.PaymentRepository;
 import com.ead.payment.repositories.UserRepository;
@@ -38,13 +39,15 @@ public class PaymentServiceImpl implements PaymentService {
     final CreditCardRepository creditCardRepository;
     final PaymentCommandPublisher paymentCommandPublisher;
     final PaymentStripeService paymentStripeService;
+    final PaymentEventPublisher paymentEventPublisher;
 
-    public PaymentServiceImpl(PaymentRepository paymentRepository, UserRepository userRepository, CreditCardRepository creditCardRepository, PaymentCommandPublisher paymentCommandPublisher, PaymentStripeService paymentStripeService) {
+    public PaymentServiceImpl(PaymentRepository paymentRepository, UserRepository userRepository, CreditCardRepository creditCardRepository, PaymentCommandPublisher paymentCommandPublisher, PaymentStripeService paymentStripeService, PaymentEventPublisher paymentEventPublisher) {
         this.paymentRepository = paymentRepository;
         this.userRepository = userRepository;
         this.creditCardRepository = creditCardRepository;
         this.paymentCommandPublisher = paymentCommandPublisher;
         this.paymentStripeService = paymentStripeService;
+        this.paymentEventPublisher = paymentEventPublisher;
     }
 
     @Transactional
@@ -119,5 +122,10 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         userRepository.save(user);
+
+        if (payment.getPaymentControl().equals(PaymentControl.EFFECTED) ||
+                payment.getPaymentControl().equals(PaymentControl.REFUSED)) {
+            paymentEventPublisher.publishPaymentEvent(payment.converToPaymentEventDto());
+        }
     }
 }
