@@ -7,7 +7,7 @@ import java.util.UUID;
 
 public record UserEventRecordDto(
         UUID userId,
-        String userName,
+        String username, //TODO
         String email,
         String fullName,
         String userStatus,
@@ -16,8 +16,7 @@ public record UserEventRecordDto(
         String imageUrl,
         String actionType
 ) {
-    public UserModel convertToUserModel() {
-        var userModel = new UserModel();
+    public UserModel convertToUserModel(UserModel userModel) {
         BeanUtils.copyProperties(this, userModel);
         return userModel;
     }
